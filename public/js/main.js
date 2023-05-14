@@ -4,6 +4,18 @@ const roomName = document.getElementById("room-name");
 const userList = document.getElementById("users");
 const key = document.querySelector(".key");
 
+const secretKey = 'lPu8JSE98ax3offyD3jMxGZ8YiukMB'
+
+function encrypt(msg){
+	console.log("encrypting: " + msg);
+	return CryptoJS.RC4.encrypt(msg, secretKey ).toString();
+}
+
+function decrypt(msg){
+	console.log("decrypting: " + msg);
+	return CryptoJS.RC4.decrypt(msg, secretKey ).toString(CryptoJS.enc.Utf8);
+}
+
 console.log("ROOM", roomName, key);
 //Get username and room from the url
 
@@ -33,18 +45,15 @@ socket.on("roomUsers", ({ room, users }) => {
 //message from server
 socket.on("message", (message) => {
   console.log(message);
-  url = "http://localhost:3000/decrypt?message=" + message.text;
-  console.log("URL : " + url);
-  fetch(url)
-    .then((res) => res.json())
-    .then((decrypted) => {
-      console.log("DECRYPTED ", decrypted);
-      outputMessage({
-        username: message.username,
-        text: decrypted,
-        time: message.time,
-      });
+  
+  let decrypted = decrypt(message.text);
+
+  outputMessage({
+	username: message.username,
+	text: decrypted,
+	time: message.time,
     });
+    
 
   //Put scroll function
   chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -56,13 +65,9 @@ chatForm.addEventListener("submit", (x) => {
   x.preventDefault();
   const msg = x.target.elements.msg.value; //Get what is written by user in msg
 
-  //Emitting msg to server
-  url = "http://localhost:3000/encrypt?message=" + msg;
-  fetch(url)
-    .then((res) => res.json())
-    .then((encrypted) => {
-      socket.emit("chatMessage", encrypted);
-    });
+  let encrypted = encrypt(msg);
+  
+  socket.emit("chatMessage", encrypted);
 
   //Every time you submit a message, it will clear your input field but
   //keep the cursor their itself(focus)

@@ -5,13 +5,9 @@ const express = require("express");
 const socketio = require("socket.io");
 const formatMessage = require("./utils/messages");
 const { encrypt, decrypt } = require("./utils/cryptography.js");
-const Cryptr = require("cryptr");
 const Room = require("./RoomSchema");
 const bcrypt = require("bcrypt");
 var bodyParser = require("body-parser");
-const cryptr = new Cryptr(
-  "56dce7276d2b0a24e032beedf0473d743dbacf92aafe898e5a0f8d9898c9eae80a73798beed53489e8dbfd94191c1f28dc58cad12321d8150b93a2e092a744265fd214d7c2ef079e2f01b6d06319b7b2"
-);
 
 mongoose.connect("mongodb://0.0.0.0/chat_db");
 
@@ -47,7 +43,7 @@ io.on("connection", (socket) => {
     //Welcome current user
     socket.emit(
       "message",
-      formatMessage(botName, cryptr.encrypt("Welcome To Chatbox"))
+      formatMessage(botName, encrypt("Welcome To Chatbox"))
     );
 
     //When user enters a chat room
@@ -58,7 +54,7 @@ io.on("connection", (socket) => {
         "message",
         formatMessage(
           botName,
-          cryptr.encrypt(`${user.username} has entered the chat room`)
+          encrypt(`${user.username} has entered the chat room`)
         )
       );
 
@@ -87,7 +83,7 @@ io.on("connection", (socket) => {
         "message",
         formatMessage(
           botName,
-          cryptr.encrypt(`${user.username} has left the chat`)
+          encrypt(`${user.username} has left the chat`)
         )
       );
 
@@ -105,13 +101,13 @@ io.on("connection", (socket) => {
 app.get("/decrypt", (req, res) => {
   message = req.query.message;
   console.log("LD: " + message.length);
-  decrypted = cryptr.decrypt(message);
+  decrypted = decrypt(message);
   res.json(decrypted);
 });
 
 app.get("/encrypt", (req, res) => {
   message = req.query.message;
-  encrypted = cryptr.encrypt(message);
+  encrypted = encrypt(message);
   console.log("LE: " + encrypted.length);
   res.json(encrypted);
 });
