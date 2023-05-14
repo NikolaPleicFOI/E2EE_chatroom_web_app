@@ -116,17 +116,33 @@ app.get("/encrypt", (req, res) => {
   res.json(encrypted);
 });
 
-app.post("/validate", (req, res) => {
+app.post("/validate", async (req, res) => {
+	const existingRooms = await Room.find({});
+	if(existingRooms == []){
+		var rooms = [new Room({name:"Cyber Security", secretKey:"$2b$10$SIKJI8DVz2tucjvxPHf4NuMSMrgJSAZJzgAzH9.nen/beVGtboRQG"}),
+		new Room({name:"Algorithms", secretKey:"$2b$10$UvZQXuectzv12OZ7TjztteQ8p91iGu88ImUYzWSbIfnTla1GZchU6"}),
+		new Room({name:"Data Science", secretKey:"$2b$10$PfDVRPfObXJ47.e6Id5AGO5rmaok4tV/IToBCGQszJFOUj4ju43JC"}),
+		new Room({name:"Operating Systems", secretKey:"$2b$10$v4a6NO/TuFmBd8Fqh8W8yeiwsKxlAJlVcXCaqGmMDgNe0e7V9baqy"}),
+		new Room({name:"Artificial Intelligence", secretKey:"$2b$10$LM6N5baK7tGe2UmaEB6dIeRi7A5MU0gHk14HF.aH/aiwVY6wkfgiK"}),
+		new Room({name:"Software Engineering", secretKey:"$2b$10$vRU24JLQMkAR7cExhBIHVeIGijisoslSivG87cxE7Z4L9qHc0dtJu"})
+			];
+		for(let r of rooms){
+			const res = await r.save();
+			if(res !== r)console.log("soba " + r.name + "nije uspjesno dodana!!!!");
+			else console.log("soba " + r.name + "je uspjesno dodana");
+		}
+	}
   username = req.body["username"];
   roomName = req.body["room"];
   key = req.body.key;
-  Room.findOne({ name: roomName }, async (err, room) => {
+  await Room.findOne({ name: roomName }, (err, room) => {
     if (room === null) {
       res.redirect("wrong-password.html"); // User not Found
+	  return;
     }
 
     try {
-      if (await bcrypt.compare(key, room.secretKey)) {
+      if (bcrypt.compareSync(key, room.secretKey)) {
         rn = room.name;
         usern = username;
         url = "chat.html?room=" + rn + "&username=" + usern + "&sk=" + room._id;
@@ -136,7 +152,7 @@ app.post("/validate", (req, res) => {
     } catch(error) {
       console.log(error); // unknown error
     }
-  });
+  }).exec();
 });
 
 const PORT = process.env.PORT || 3000;
