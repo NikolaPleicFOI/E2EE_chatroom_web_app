@@ -43,7 +43,7 @@ io.on("connection", (socket) => {
     //Welcome current user
     socket.emit(
       "message",
-      formatMessage(botName, encrypt("Welcome To Chatbox"))
+      formatMessage(encrypt(botName), encrypt("Welcome To Chatbox"))
     );
 
     //When user enters a chat room
@@ -53,7 +53,7 @@ io.on("connection", (socket) => {
       .emit(
         "message",
         formatMessage(
-          botName,
+          encrypt(botName),
           encrypt(`${user.username} has entered the chat room`)
         )
       );
@@ -66,11 +66,9 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("chatMessage", (msg) => {
-    const user = getCurrentUser(socket.id);
-
+  socket.on("chatMessage", (room, username, msg) => {
     //console.log(msg);
-    io.to(user.room).emit("message", formatMessage(user.username, msg));
+    io.to(room).emit("message", formatMessage(username, msg));
   });
 
   //When user disconnects
@@ -82,7 +80,7 @@ io.on("connection", (socket) => {
       io.to(user.room).emit(
         "message",
         formatMessage(
-          botName,
+          encrypt(botName),
           encrypt(`${user.username} has left the chat`)
         )
       );
