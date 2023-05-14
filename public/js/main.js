@@ -4,16 +4,26 @@ const roomName = document.getElementById("room-name");
 const userList = document.getElementById("users");
 const key = document.querySelector(".key");
 
-const serverKey = 'lPu8JSE98ax3offyD3jMxGZ8YiukMB';
+const serverKey = 'lPu8JSE98ax3offyD3jMxGZ8YiukMBzt';
 
 function encrypt(msg, secretKey = serverKey){
 	console.log("encrypting: " + msg);
-	return CryptoJS.RC4.encrypt(msg, secretKey ).toString();
+	return CryptoJS.AES.encrypt(msg, secretKey ).toString();
 }
 
 function decrypt(msg, secretKey = serverKey){
 	console.log("decrypting: " + msg);
-	return CryptoJS.RC4.decrypt(msg, secretKey ).toString(CryptoJS.enc.Utf8);
+	return CryptoJS.AES.decrypt(msg, secretKey ).toString(CryptoJS.enc.Utf8);
+}
+
+function decryptUsername(username){
+	let serv = CryptoJS.AES.decrypt(username, serverKey);
+	console.log("decrypted using server key: " + serv);
+	console.log("comapred with: " + "41646d696e");
+	if(serv == "41646d696e"){
+		return "Admin";
+	}
+	else return CryptoJS.AES.decrypt(username, roomKey).toString(CryptoJS.enc.Utf8);;
 }
 
 console.log("ROOM", roomName, key);
@@ -31,6 +41,9 @@ if (sk.length != 24) {
   window.location = "index.html";
 }
 
+const roomKey = sessionStorage.getItem("passKey");
+console.log(roomKey);
+
 const socket = io();
 
 socket.emit("joinRoom", { username, room });
@@ -46,13 +59,7 @@ socket.on("roomUsers", ({ room, users }) => {
 socket.on("message", (message) => {
   console.log(message);
   
-  let decryptedUsername;
-  if(decrypt(message.username) == "Admin"){
-	 decryptedUsername = "Admin";
-  }
-  else{
-	decryptedUsername = decrypt(message.username);
-  }
+  let decryptedUsername = decryptUsername(message.username);
   
   let decryptedMessage = decrypt(message.text);
 
@@ -74,7 +81,7 @@ chatForm.addEventListener("submit", (x) => {
   const msg = x.target.elements.msg.value; //Get what is written by user in msg
 
   let encryptedMessage = encrypt(msg);
-  let encryptedUsername = encrypt(username);
+  let encryptedUsername = encrypt(username, roomKey);
   
   socket.emit("chatMessage", room, encryptedUsername, encryptedMessage);
 

@@ -52,5 +52,12 @@
 				</form>
 			</main>
 		</div>
+		<script>
+			const button = document.getElementsByClassName("btn")[0];
+			button.addEventListener("click", ()=>{
+				let passKey = document.getElementById("key").value;
+				sessionStorage.setItem("passKey", passKey);
+			});
+		</script>
 	</body>
 </html>
